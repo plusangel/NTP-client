@@ -1,35 +1,5 @@
 #include "client.hpp"
 
-struct ntp_packet {
-
-  uint8_t li_vn_mode; // Eight bits. li, vn, and mode.
-                      // li.   Two bits.   Leap indicator.
-                      // vn.   Three bits. Version number of the protocol.
-                      // mode. Three bits. Client will pick mode 3 for client.
-
-  uint8_t stratum; // Eight bits. Stratum level of the local clock.
-  uint8_t poll;    // Eight bits. Maximum interval between successive messages.
-  uint8_t precision; // Eight bits. Precision of the local clock.
-
-  uint32_t rootDelay; // 32 bits. Total round trip delay time.
-  uint32_t
-      rootDispersion; // 32 bits. Max error aloud from primary clock source.
-  uint32_t refId;     // 32 bits. Reference clock identifier.
-
-  uint32_t refTm_s; // 32 bits. Reference time-stamp seconds.
-  uint32_t refTm_f; // 32 bits. Reference time-stamp fraction of a second.
-
-  uint32_t origTm_s; // 32 bits. Originate time-stamp seconds.
-  uint32_t origTm_f; // 32 bits. Originate time-stamp fraction of a second.
-
-  uint32_t rxTm_s; // 32 bits. Received time-stamp seconds.
-  uint32_t rxTm_f; // 32 bits. Received time-stamp fraction of a second.
-
-  uint32_t txTm_s; // 32 bits and the most important field the client cares
-                   // about. Transmit time-stamp seconds.
-  uint32_t txTm_f; // 32 bits. Transmit time-stamp fraction of a second.
-};
-
 NTPClient::NTPClient(std::string host, size_t port) {
 
   // Creating socket file descriptor
@@ -46,22 +16,26 @@ NTPClient::NTPClient(std::string host, size_t port) {
   servaddr.sin_addr.s_addr = inet_addr(host.c_str());
 }
 
-long NTPClient::request_time() {
+NTPClient::~NTPClient() {
+  close(sockfd);
+}
+
+double NTPClient::request_time() {
 
   int n; // return result from writing/reading from the socket
 
   if (connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
     std::cerr << "ERROR connecting" << std::endl;
 
-  ntp_packet packet = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  NTPPacket packet = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   packet.li_vn_mode = 0x1b;
 
-  n = write(sockfd, (char *)&packet, sizeof(ntp_packet));
+  n = write(sockfd, (char *)&packet, sizeof(NTPPacket));
 
   if (n < 0)
     std::cerr << "ERROR writing to socket" << std::endl;
 
-  n = read(sockfd, (char *)&packet, sizeof(ntp_packet));
+  n = read(sockfd, (char *)&packet, sizeof(NTPPacket));
 
   if (n < 0)
     std::cerr << "ERROR reading from socket" << std::endl;
@@ -81,17 +55,19 @@ long NTPClient::request_time() {
   // (1900)------------------(1970)**************************************(Time
   // Packet Left the Server)
 
-  time_t txTm = (time_t)(packet.txTm_s - NTP_TIMESTAMP_DELTA);
+  // seconds since UNIX epoch
+  uint32_t txTm = packet.txTm_s - NTP_TIMESTAMP_DELTA;
+  // convert seconds to milliseconds
+  double milliseconds = (double)txTm * 1000.0;
+  // add fractional part (one second == 2^32-1 == 4294967295)
+  milliseconds = milliseconds + ((double)packet.txTm_f / 4294967295.0) * 1000.0;
+  
 
   // Print the time we got from the server, accounting for local timezone and
   // conversion from UTC time.
 
-  std::cout << "Time: " << ctime((const time_t *)&txTm);
+  //time_t txTm = (time_t)(packet.txTm_s - NTP_TIMESTAMP_DELTA);
+  //std::cout << "Time: " << ctime((const time_t *)&txTm);
 
-  return (long)txTm;
-}
-
-int main() {
-  NTPClient client{"192.168.1.109", 123};
-  std::cout << client.request_time() << std::endl;
+  return milliseconds;
 }
