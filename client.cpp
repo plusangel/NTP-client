@@ -16,9 +16,7 @@ NTPClient::NTPClient(std::string host, size_t port) {
   servaddr.sin_addr.s_addr = inet_addr(host.c_str());
 }
 
-NTPClient::~NTPClient() {
-  close(sockfd);
-}
+NTPClient::~NTPClient() { close(sockfd); }
 
 double NTPClient::request_time() {
 
@@ -52,22 +50,20 @@ double NTPClient::request_time() {
   // from when the packet left the server. Subtract 70 years worth of seconds
   // from the seconds since 1900. This leaves the seconds since the UNIX epoch
   // of 1970.
-  // (1900)------------------(1970)**************************************(Time
-  // Packet Left the Server)
+  // (1900)---------(1970)**********(Time Packet Left the Server)
 
   // seconds since UNIX epoch
   uint32_t txTm = packet.txTm_s - NTP_TIMESTAMP_DELTA;
   // convert seconds to milliseconds
-  double milliseconds = (double)txTm * 1000.0;
-  // add fractional part (one second == 2^32-1 == 4294967295)
-  milliseconds = milliseconds + ((double)packet.txTm_f / 4294967295.0) * 1000.0;
-  
+  double milliseconds = (double)txTm * 1000l;
+  // add fractional part
+  milliseconds = milliseconds + ((double)packet.txTm_f / ONE_SECOND) * 1000.0l;
 
   // Print the time we got from the server, accounting for local timezone and
   // conversion from UTC time.
 
-  //time_t txTm = (time_t)(packet.txTm_s - NTP_TIMESTAMP_DELTA);
-  //std::cout << "Time: " << ctime((const time_t *)&txTm);
+  // time_t txTm = (time_t)(packet.txTm_s - NTP_TIMESTAMP_DELTA);
+  // std::cout << "Time: " << ctime((const time_t *)&txTm);
 
   return milliseconds;
 }

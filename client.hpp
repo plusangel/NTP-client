@@ -44,6 +44,13 @@ struct NTPClient {
   NTPClient(std::string host, size_t port);
   ~NTPClient();
 
+  /**
+   * @brief Transmits an NTP request to the defined server and returns the
+   * timestamp
+   *
+   * @return double the number of milliseconds since 1970 including the
+   * fractions
+   */
   double request_time();
 
 private:
@@ -61,6 +68,9 @@ private:
 
   /// @brief Delta between epoch time and ntp time
   static constexpr long NTP_TIMESTAMP_DELTA{2208988800ull};
+
+  /// @brief Fractional part (one second == 2^32-1 == 4294967295)
+  static constexpr double ONE_SECOND{4294967295ll};
 };
 
 #endif // NTPCLIENT_H
