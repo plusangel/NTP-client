@@ -1,6 +1,7 @@
 # NTP client
 
 This is a C++ class that implements a NTP client. It has been tested with a chrony server.
+I have also included a sample of my chrony.conf file where I have setup a local server and client for my experiments.
 
 ### build
 First create an empty directory inside your working folder:
