@@ -1,46 +1,62 @@
 #ifndef NTPCLIENT_H
 #define NTPCLIENT_H
 
-#include <arpa/inet.h>
-#include <cstring>
-#include <iostream>
-#include <netinet/in.h>
 #include <string>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <netinet/in.h>
 
-struct NTPPacket {
+struct NTPPacket
+{
 
   uint8_t li_vn_mode; // Eight bits. li, vn, and mode.
                       // li.   Two bits.   Leap indicator.
                       // vn.   Three bits. Version number of the protocol.
                       // mode. Three bits. Client will pick mode 3 for client.
 
-  uint8_t stratum; // Eight bits. Stratum level of the local clock.
-  uint8_t poll;    // Eight bits. Maximum interval between successive messages.
-  uint8_t precision; // Eight bits. Precision of the local clock.
+  // Eight bits. Stratum level of the local clock.
+  uint8_t stratum;
+  
+  // Eight bits. Maximum interval between successive messages.
+  uint8_t poll;     
+  
+  // Eight bits. Precision of the local clock.
+  uint8_t precision; 
 
-  uint32_t rootDelay; // 32 bits. Total round trip delay time.
-  uint32_t
-      rootDispersion; // 32 bits. Max error aloud from primary clock source.
-  uint32_t refId;     // 32 bits. Reference clock identifier.
+  // 32 bits. Total round trip delay time.
+  uint32_t rootDelay; 
 
-  uint32_t refTm_s; // 32 bits. Reference time-stamp seconds.
-  uint32_t refTm_f; // 32 bits. Reference time-stamp fraction of a second.
+  // 32 bits. Max error aloud from primary clock source.
+  uint32_t root_dispersion;
 
-  uint32_t origTm_s; // 32 bits. Originate time-stamp seconds.
-  uint32_t origTm_f; // 32 bits. Originate time-stamp fraction of a second.
+  // 32 bits. Reference clock identifier.
+  uint32_t ref_id;
 
-  uint32_t rxTm_s; // 32 bits. Received time-stamp seconds.
-  uint32_t rxTm_f; // 32 bits. Received time-stamp fraction of a second.
+  // 32 bits. Reference time-stamp seconds.
+  uint32_t ref_timestamp_sec;
 
-  uint32_t txTm_s; // 32 bits and the most important field the client cares
-                   // about. Transmit time-stamp seconds.
-  uint32_t txTm_f; // 32 bits. Transmit time-stamp fraction of a second.
+  // 32 bits. Reference time-stamp fraction of a second.
+  uint32_t ref_timestamp_sec_frac;
+
+  // 32 bits. Originate time-stamp seconds.
+  uint32_t orig_timestamp_sec;
+
+  // 32 bits. Originate time-stamp fraction of a second.
+  uint32_t orig_timestamp_sec_frac;
+
+  // 32 bits. Received time-stamp seconds.
+  uint32_t received_timestamp_sec;
+
+  // 32 bits. Received time-stamp fraction of a second.
+  uint32_t received_timestamp_sec_frac;
+
+  // 32 bits and the most important field the client cares about. Transmit time-stamp seconds.
+  uint32_t transmited_timestamp_sec;
+
+  // 32 bits. Transmit time-stamp fraction of a second.
+  uint32_t transmited_timestamp_sec_frac;
 };
 
-struct NTPClient {
+struct NTPClient
+{
   NTPClient(std::string host, size_t port);
   ~NTPClient();
 
@@ -48,23 +64,25 @@ struct NTPClient {
    * @brief Transmits an NTP request to the defined server and returns the
    * timestamp
    *
-   * @return double the number of milliseconds since 1970 including the
-   * fractions
+   * @return (uint64_t) the number of milliseconds since 1970.
    */
-  double request_time();
+  uint64_t request_time();
 
 private:
+  std::string hostname_to_ip(const std::string &hostname);
+  void build_connection();
+
   /// @brief NTP server IP address
-  std::string host;
+  std::string hostname_;
 
   /// @brief NTP server port
-  size_t port;
+  size_t port_;
 
   /// @brief Socket file descriptor
-  int sockfd;
+  int socket_fd;
 
   /// @brief Server address data structure
-  struct sockaddr_in servaddr;
+  struct sockaddr_in socket_client;
 
   /// @brief Delta between epoch time and ntp time
   static constexpr long NTP_TIMESTAMP_DELTA{2208988800ull};

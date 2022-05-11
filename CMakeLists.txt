@@ -5,5 +5,5 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_library(client client.cpp)
 
-add_executable(main main.cpp)
-target_link_libraries(main client)
+add_executable(ntp_client main.cpp)
+target_link_libraries(ntp_client client)
