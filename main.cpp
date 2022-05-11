@@ -1,6 +1,9 @@
 #include "client.hpp"
+
 #include <iostream>
 #include <iomanip>
+
+#include "time.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,7 +18,22 @@ int main(int argc, char *argv[])
     }
 
     NTPClient client{argv[1], std::stoi(argv[2])};
-    std::cout << std::fixed << client.request_time() << std::endl;
+
+    auto epoch_server_ms = client.request_time();
+    
+    if (0 == epoch_server_ms)
+        return EXIT_FAILURE;
+
+    // The function ctime receives the timestamps in seconds. 
+    time_t epoch_server = (uint32_t)(epoch_server_ms / 1000);
+
+    std::cout << "Server time: " << ctime(&epoch_server);
+    std::cout << "Timestamp server: " << (uint32_t)epoch_server << "\n\n";
+
+    time_t local_time;
+    local_time = time(0);
+
+    std::cout << "System time is " << (epoch_server - local_time) << " seconds off\n";
 
     return EXIT_SUCCESS;
 }

@@ -21,14 +21,19 @@ void NTPClient::build_connection()
     // Creating socket file descriptor
     if ((socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
     {
-        std::cerr << "socket creation failed" << std::endl;
+        std::cerr << "Socket creation failed\n";
+        return;
     }
 
     memset(&socket_client, 0, sizeof(socket_client));
 
     std::string ntp_server_ip = hostname_to_ip(hostname_);
 
-    std::cout << "Sending request to: " << ntp_server_ip << "\n";
+    std::cout << "Creating socket with: " << ntp_server_ip << "\n";
+
+    timeval timeout_time_value{};
+    timeout_time_value.tv_sec = 1; // timeout in seconds
+    setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout_time_value, sizeof(timeout_time_value));
 
     // Filling server information
     socket_client.sin_family = AF_INET;
@@ -44,21 +49,34 @@ uint64_t NTPClient::request_time()
 
     build_connection();
 
+    std::cout << "Connecting\n";
     if (connect(socket_fd, (struct sockaddr *)&socket_client, sizeof(socket_client)) < 0)
-        std::cerr << "ERROR connecting" << std::endl;
+    {
+        std::cerr << "ERROR connecting\n";
+        return 0;
+    }
 
     NTPPacket packet = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     packet.li_vn_mode = 0x1b;
 
+    std::cout << "Sending request\n";
     response = write(socket_fd, (char *)&packet, sizeof(NTPPacket));
 
     if (response < 0)
-        std::cerr << "ERROR writing to socket" << std::endl;
+    {
+        std::cerr << "ERROR writing to socket\n";
+        return 0;
+    }
 
+    std::cout << "Reading request\n";
     response = read(socket_fd, (char *)&packet, sizeof(NTPPacket));
 
     if (response < 0)
-        std::cerr << "ERROR reading from socket" << std::endl;
+    {
+        std::cerr << "ERROR reading from socket\n";
+        close_socket();
+        return 0;
+    }
 
     // These two fields contain the time-stamp seconds as the packet left the NTP
     // server. The number of seconds correspond to the seconds passed since 1900.
@@ -78,8 +96,6 @@ uint64_t NTPClient::request_time()
     uint32_t txTm = packet.transmited_timestamp_sec - NTP_TIMESTAMP_DELTA;
     // convert seconds to milliseconds
     double milliseconds = (double)txTm * 1000l;
-    // add fractional part
-    milliseconds = milliseconds + ((double)packet.transmited_timestamp_sec_frac / ONE_SECOND) * 1000.0l;
 
     return milliseconds;
 }
@@ -90,4 +106,13 @@ std::string NTPClient::hostname_to_ip(const std::string &host)
     if (hostname)
         return std::string(inet_ntoa(**(in_addr **)hostname->h_addr_list));
     return {};
+}
+
+void NTPClient::close_socket()
+{
+    if (socket_fd != -1)
+    {
+        close(socket_fd);
+        socket_fd = -1;
+    }
 }
