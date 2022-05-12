@@ -56,7 +56,7 @@ struct NTPPacket
 
 struct NTPClient
 {
-    NTPClient(std::string host, size_t port);
+    NTPClient(std::string host, uint16_t port);
     ~NTPClient();
 
     /**
@@ -68,8 +68,18 @@ struct NTPClient
     uint64_t request_time();
 
 private:
+    /**
+     * @brief Converts from hostname to ip address
+     * 
+     * @param hostname name of the host.
+     * @return ip address. Return empty string if coun't find the ip.
+     */
     std::string hostname_to_ip(const std::string &hostname);
+
+    /// @brief Build the connection. Set all the params for the socket_client.
     void build_connection();
+
+    /// @brief Close the connection. Set -1 to socket_fd. 
     void close_socket();
 
     /// @brief NTP server IP address

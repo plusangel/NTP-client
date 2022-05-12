@@ -12,7 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 
-NTPClient::NTPClient(std::string hostname, size_t port) : hostname_(hostname), port_(port)
+NTPClient::NTPClient(std::string hostname, uint16_t port) : hostname_(hostname), port_(port)
 {
 }
 
