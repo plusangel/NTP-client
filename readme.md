@@ -16,6 +16,14 @@ and
 ```
 cmake --build .
 ```
+
+Optional, if you want to install: 
+
+```
+make install DESTDIR={YOUR_INSTALLATION_PATH}
+```
+By default, the installation path is `/usr/local/`
+
 ### licence
 Part of the code has been based to C NTPClient by David Lettier
 
@@ -28,3 +36,9 @@ Part of the code has been based to C NTPClient by David Lettier
 
 - [Ubuntu Bionic: Using chrony to configure NTP](https://ubuntu.com/blog/ubuntu-bionic-using-chrony-to-configure-ntp) (which works for Xenial as well)
 - [rosbee - chrony.wiki](https://code.google.com/archive/p/rosbee/wikis/chrony.wiki)
+
+### License
+[MIT](./license.md)
+
+### Contributors
+Add your name if you are a [contributor](./CONTRIBUTING.md) 
