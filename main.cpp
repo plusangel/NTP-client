@@ -1,4 +1,4 @@
-#include "client.hpp"
+#include "ntp_client.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     NTPClient client{argv[1], std::stoi(argv[2])};
 
     auto epoch_server_ms = client.request_time();
-    
+
     if (0 == epoch_server_ms)
         return EXIT_FAILURE;
 
