@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     if (0 == epoch_server_ms)
         return EXIT_FAILURE;
 
-    // The function ctime receives the timestamps in seconds. 
+    // The function ctime receives the timestamps in seconds.
     time_t epoch_server = (uint32_t)(epoch_server_ms / 1000);
 
     std::cout << "Server time: " << ctime(&epoch_server);
