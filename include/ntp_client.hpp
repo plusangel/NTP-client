@@ -95,7 +95,7 @@ private:
     struct sockaddr_in socket_client;
 
     /// @brief Delta between epoch time and ntp time
-    static constexpr long NTP_TIMESTAMP_DELTA{2208988800ull};
+    static constexpr unsigned long long NTP_TIMESTAMP_DELTA{2208988800ull};
 };
 
 #endif // NTPCLIENT_H
