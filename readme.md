@@ -41,4 +41,5 @@ Part of the code has been based to C NTPClient by David Lettier
 [MIT](./license.md)
 
 ### Contributors
-Add your name if you are a [contributor](./CONTRIBUTING.md) 
+[Angelos Plastropoulos](https://github.com/plusangel) \
+[Jairo Reyes](https://github.com/jairoareyes)
