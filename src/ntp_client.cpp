@@ -5,15 +5,24 @@
 
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#ifdef _WIN32
+#   include <WinSock2.h>
+#   define close(X) closesocket(X)
+#else
+#   include <sys/socket.h>
+#   include <arpa/inet.h>
+#   include <netdb.h>
+#   include <unistd.h>
+#endif
 #include <time.h>
 #include <string.h>
-#include <unistd.h>
 
 NTPClient::NTPClient(std::string hostname, uint16_t port) : hostname_(hostname), port_(port)
 {
+#ifdef _WIN32
+    WSADATA wsaData = { 0 };
+    (void)WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif;
 }
 
 void NTPClient::build_connection()
@@ -41,7 +50,14 @@ void NTPClient::build_connection()
     socket_client.sin_addr.s_addr = inet_addr(ntp_server_ip.c_str());
 }
 
-NTPClient::~NTPClient() { close(socket_fd); }
+NTPClient::~NTPClient()
+{
+    close_socket();
+
+#ifdef _WIN32
+    WSACleanup();
+#endif
+}
 
 uint64_t NTPClient::request_time()
 {
@@ -60,7 +76,11 @@ uint64_t NTPClient::request_time()
     packet.li_vn_mode = 0x1b;
 
     std::cout << "Sending request\n";
-    response = write(socket_fd, (char *)&packet, sizeof(NTPPacket));
+#ifdef _WIN32
+    response = sendto(socket_fd, (char*)&packet, sizeof(NTPPacket), 0, (struct sockaddr*)&socket_client, sizeof(socket_client));
+#else
+    response = write(socket_fd, (char*)&packet, sizeof(NTPPacket));
+#endif
 
     if (response < 0)
     {
@@ -69,7 +89,11 @@ uint64_t NTPClient::request_time()
     }
 
     std::cout << "Reading request\n";
+#ifdef _WIN32
+    response = recv(socket_fd, (char*)&packet, sizeof(NTPPacket), 0);
+#else
     response = read(socket_fd, (char *)&packet, sizeof(NTPPacket));
+#endif
 
     if (response < 0)
     {

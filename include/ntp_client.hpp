@@ -2,7 +2,13 @@
 #define NTPCLIENT_H
 
 #include <string>
-#include <netinet/in.h>
+#ifdef _WIN32
+#   include <WinSock2.h>
+using Socket = SOCKET;
+#else
+#   include <netinet/in.h>
+using Socket = int;
+#endif
 
 struct NTPPacket
 {
@@ -89,7 +95,7 @@ private:
     size_t port_;
 
     /// @brief Socket file descriptor
-    int socket_fd;
+    Socket socket_fd;
 
     /// @brief Server address data structure
     struct sockaddr_in socket_client;
