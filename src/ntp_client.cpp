@@ -40,9 +40,15 @@ void NTPClient::build_connection()
 
     std::cout << "Creating socket with: " << ntp_server_ip << "\n";
 
+#ifdef _WIN32
+    DWORD timeout_sec = 1; // timeout in seconds
+    DWORD timeout_time_value = timeout_sec * 1000;
+    setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout_time_value, sizeof(timeout_time_value));
+#else
     timeval timeout_time_value{};
     timeout_time_value.tv_sec = 1; // timeout in seconds
-    setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout_time_value, sizeof(timeout_time_value));
+    setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout_time_value, sizeof(timeout_time_value));
+#endif
 
     // Filling server information
     socket_client.sin_family = AF_INET;
